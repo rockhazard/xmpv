@@ -2,7 +2,6 @@
 
 # use xspf playlists with mpv, which does not natively support them
 # depends: mpv, rofi
-# todo: pass parameters 3+ to mpv after processing xspf playlists: ${@:3}
 # license: MIT
 # author: rockhazard
 # (c)2021 rockhazard
