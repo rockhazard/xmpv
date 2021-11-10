@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+# use xspf playlists with mpv, which does not natively support them
+# depends: mpv, rofi
+# todo: pass parameters 3+ to mpv after processing xspf playlists: ${@:3}
+# license: MIT
+# author: rockhazard
+# (c)2021 rockhazard
+
+usage(){
+    echo "xmpv is a wrapper for mpv that parses xspf playlists"
+    echo "USAGE: xmpv [-p | -s | -d PLAYLIST.XSPF] [MPV OPTIONS]"
+    echo "-p, --xspf-playlist ... play xspf playlist using mpv"
+    echo "-s, --select .......... select a track to play from an xspf playlist"
+    echo "-d, --dump ............ print extracted track list paths to stdout"
+    echo "-h, --help ............ print this help document"
+}
+# temp file uses m3u extension to help the user id it if necessary
+list=$(mktemp -p /tmp -t xspf-tracks-tmp.XXXXXX.m3u) || exit 1
+declare -A tracklist=()
+warn="ERROR: Please provide a valid xspf playlist."
+
+if [[ -a "$2" ]]; then
+    playlist="$2"
+    xspf_test=$(file --mime "$playlist" | grep "text/xml" | wc -l)
+fi
+
+test_playlist(){
+    if [[ "$xspf_test" -lt 1 ]]; then
+        echo "$warn"
+        exit 1
+    fi
+}
+
+format_playlist(){
+    # builds non-interactive playlist for mpv, and interactive list for rofi
+    test_playlist
+    grep "<location>.*</location" "$playlist" > "$list"
+    # strip xml and replace some ASCII URL encodings with literals for mpv
+    sed -i -e "s#<location>file://##g" -e "s#</location>##g" \
+    -e "s#%26#\&#g" \
+    -e "s#%28#\(#g" \
+    -e "s#%29#\)#g" \
+    -e "s#%5B#\[#g" \
+    -e "s#%5D#\]#g" \
+    -e "s#%2C#\,#g" \
+    -e "s#%21#\!#g" \
+    -e "s#%23#\##g" \
+    -e "s#\%20# #g" \
+    -e "s#\%C2\%AE#®#g" \
+    -e "s#\%27#\'#g" \
+    "$list"
+    while IFS= read -r line; do
+        tracklist["${line##*/}"]="$line"
+    done < $list
+}
+
+xselect(){
+    format_playlist && choice=$(printf '%s\n' "${!tracklist[@]}"  | sort | \
+    rofi -width 60 -dmenu -p "Search playlist")
+    if [ "$choice" ]; then
+        title=$(printf '%s\n' "${tracklist["$choice"]}")
+        echo "${title}" | xargs -I % mpv "%" "${@:2}"# strip spaces
+    else
+        echo "exiting program..."
+    fi
+}
+
+case "$1" in
+    -d | --dump ) format_playlist && xargs --arg-file="$list" -I % echo -e "%"
+    ;;
+    -h | --help ) usage
+    ;;
+    -s | --select ) xselect
+    ;;
+    -p | --xspf-playlist ) format_playlist && mpv "$list" "${@:3}"
+    ;;
+    * ) mpv "$@"
+    ;;
+esac
+
+trap 'rm -f "$list"' EXIT
