@@ -7,8 +7,8 @@
 # (c)2021 rockhazard
 
 usage(){
-    echo "xmpv is a wrapper for mpv that parses xspf playlists"
-    echo "USAGE: xmpv [-p | -s | -d PLAYLIST.XSPF] [MPV OPTIONS]"
+    echo "xmpv is a wrapper for mpv that parses xspf playlists for use with mpv"
+    echo "SYNOPSIS: xmpv [-p | -s | -d PLAYLIST.XSPF] [MPV OPTIONS]"
     echo "-p, --xspf-playlist ... play xspf playlist using mpv"
     echo "-s, --select .......... select a track to play from an xspf playlist"
     echo "-d, --dump ............ print extracted track list paths to stdout"
