@@ -36,17 +36,17 @@ convert_playlist(){
     test_playlist
     grep "<location>.*</location" "$playlist" > "$list"
     # ASCII URL encodings prevent mpv playback, so replacing some with literals
-    sed -i -e "s#<location>file://##g" -e "s#</location>##g" \
-    -e "s#%26#\&#g" \
-    -e "s#%28#\(#g" \
-    -e "s#%29#\)#g" \
-    -e "s#%5B#\[#g" \
-    -e "s#%5D#\]#g" \
-    -e "s#%2C#\,#g" \
-    -e "s#%21#\!#g" \
-    -e "s#%23#\##g" \
-    -e "s#\%20# #g" \
-    -e "s#\%C2\%AE#®#g" \
+    sed -i -e 's#<location>file://##g' -e 's#</location>##g' \
+    -e 's#%26#\&#g' \
+    -e 's#%28#\(#g' \
+    -e 's#%29#\)#g' \
+    -e 's#%5B#\[#g' \
+    -e 's#%5D#\]#g' \
+    -e 's#%2C#\,#g' \
+    -e 's#%21#\!#g' \
+    -e 's#%23#\##g' \
+    -e 's#\%20# #g' \
+    -e 's#\%C2\%AE#®#g' \
     -e "s#\%27#\'#g" \
     "$list"
     while IFS= read -r line; do
