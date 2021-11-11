@@ -31,7 +31,7 @@ test_playlist(){
     fi
 }
 
-format_playlist(){
+convert_playlist(){
     # builds file paths list for mpv and rofi
     test_playlist
     grep "<location>.*</location" "$playlist" > "$list"
@@ -54,8 +54,8 @@ format_playlist(){
     done < $list
 }
 
-xselect(){
-    format_playlist && choice=$(printf '%s\n' "${!tracklist[@]}"  | sort | \
+select_track(){
+    convert_playlist && choice=$(printf '%s\n' "${!tracklist[@]}"  | sort | \
     rofi -width 60 -dmenu -p "Search playlist")
     if [ "$choice" ]; then
         title=$(printf '%s\n' "${tracklist["$choice"]}")
@@ -67,13 +67,13 @@ xselect(){
 }
 
 case "$1" in
-    -d | --dump ) format_playlist && xargs --arg-file="$list" -I % echo -e "%"
+    -d | --dump ) convert_playlist && xargs --arg-file="$list" -I % echo -e "%"
     ;;
     -h | --help ) usage
     ;;
-    -s | --select ) xselect
+    -s | --select ) select_track
     ;;
-    -p | --xspf-playlist ) format_playlist && mpv "$list" "${@:3}"
+    -p | --xspf-playlist ) convert_playlist && mpv "$list" "${@:3}"
     ;;
     * ) mpv "$@"
     ;;
