@@ -9,12 +9,12 @@
 usage(){
     echo "xmpv is a wrapper for mpv that parses xspf playlists for use with mpv"
     echo "SYNOPSIS: xmpv [-p | -s | -d PLAYLIST.XSPF] [MPV OPTIONS]"
-    echo "-p, --xspf-playlist ... play xspf playlist using mpv"
-    echo "-s, --select .......... select a track to play from an xspf playlist"
-    echo "-d, --dump ............ print extracted track list paths to stdout"
+    echo "-p, --xspf-playlist ... use mpv to play PLAYLIST.XSPF"
+    echo "-s, --select .......... play a selected track from PLAYLIST.XSPF"
+    echo "-d, --dump ............ print extracted tracks from PLAYLIST.XSPF"
     echo "-h, --help ............ print this help document"
 }
-# temp file uses m3u extension to help the user id it if necessary
+
 list=$(mktemp -p /tmp -t xspf-tracks-tmp.XXXXXX.m3u) || exit 1
 declare -A tracklist=()
 warn="ERROR: Please provide a valid xspf playlist."
@@ -32,10 +32,10 @@ test_playlist(){
 }
 
 format_playlist(){
-    # builds non-interactive playlist for mpv, and interactive list for rofi
+    # builds file paths list for mpv and rofi
     test_playlist
     grep "<location>.*</location" "$playlist" > "$list"
-    # strip xml and replace some ASCII URL encodings with literals for mpv
+    # ASCII URL encodings prevent mpv playback, so replacing some with literals
     sed -i -e "s#<location>file://##g" -e "s#</location>##g" \
     -e "s#%26#\&#g" \
     -e "s#%28#\(#g" \
@@ -59,7 +59,8 @@ xselect(){
     rofi -width 60 -dmenu -p "Search playlist")
     if [ "$choice" ]; then
         title=$(printf '%s\n' "${tracklist["$choice"]}")
-        echo "${title}" | xargs -I % mpv "%" "${@:2}"# strip spaces
+        # allow full use of standard mpv options
+        echo "${title}" | xargs -I % mpv "%" "${@:2}" # strip spaces
     else
         echo "exiting program..."
     fi
